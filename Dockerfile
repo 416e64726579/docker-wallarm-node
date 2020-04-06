@@ -20,18 +20,20 @@ RUN printf -- "mQINBFL1Xl4BEADEFCVumPx2W4hQJG+4RRS0Zjw503a0YKH8tKp3OEWIMKiWwWiaT
     && chown -R wallarm:wallarm /var/lib/wallarm-tarantool \
     && sed -i -e 's|/var/log/wallarm/brute\.log|/var/log/wallarm/brute-detect\.log|' /etc/logrotate.d/wallarm-common \
     && sed -i -e 's|/usr/share/wallarm-common/syncnode|/usr/share/wallarm-common/syncnode -c /etc/wallarm-dist/node.yaml|' /etc/cron.d/wallarm-node-nginx \
+    && sed -i -e 's|127.0.0.8|127.0.0.8:81|' /etc/collectd/collectd.conf.d/nginx-wallarm.conf \
     && rm -rf /etc/wallarm/triggers.d/ \
     && mkdir -p /etc/wallarm-dist/triggers.d
 
 COPY conf/node.yaml /etc/wallarm-dist/
 COPY scripts/trigger /etc/wallarm-dist/triggers.d/nginx
-COPY scripts/init /usr/local/bin/
-COPY conf/supervisord.conf /etc/supervisor/
+COPY scripts/init scripts/nginx.sh scripts/tarantool.sh /usr/local/bin/
+COPY conf/supervisord*.conf /etc/supervisor/
+COPY conf/wallarm-node-tarantool /etc/cron.d/
 COPY conf/logrotate.conf /etc/
 COPY conf/default /etc/nginx/sites-enabled/
 COPY conf/wallarm-status.conf /etc/nginx/conf.d/
 COPY conf/collectd.conf /etc/collectd/
 
-EXPOSE 80 443
+EXPOSE 9378
 
 CMD ["/usr/local/bin/init"]
