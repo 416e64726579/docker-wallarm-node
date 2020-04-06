@@ -34,6 +34,6 @@ COPY conf/default /etc/nginx/sites-enabled/
 COPY conf/wallarm-status.conf /etc/nginx/conf.d/
 COPY conf/collectd.conf /etc/collectd/
 
-EXPOSE 9378
+EXPOSE 80 443
 
 CMD ["/usr/local/bin/init"]
