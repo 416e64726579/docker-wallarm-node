@@ -12,8 +12,6 @@ prepare_dirs() {
   touch $TARANTOOL_LOGFILE
   chown wallarm:wallarm $TARANTOOL_LOGFILE
 
-  touch /etc/crontab /etc/cron.d/*
-
   mkdir -p /run/supervisor
 }
 
@@ -58,38 +56,6 @@ register_node() {
   fi
 }
 
-sync_node() {
-  cmd="/usr/share/wallarm-common/syncnode -c /etc/wallarm-dist/node.yaml -l STDOUT"
-
-  while true; do
-    if $cmd; then
-      break
-    elif [ -f /etc/wallarm/proton.db -a -f /etc/wallarm/proton.db ]; then
-      break
-    else
-      echo "Wait before next syncnode attempt..."
-      sleep 5
-    fi
-  done
-}
-
-configure_nginx() {
-  [ -n "$NGINX_BACKEND" ] || return 0
-
-  if [ "$NGINX_BACKEND" = "${NGINX_BACKEND#http://}" -a \
-       "$NGINX_BACKEND" = "${NGINX_BACKEND#https://}" ];
-  then
-    sed -i -e "s#proxy_pass .*#proxy_pass http://$NGINX_BACKEND;#" \
-      /etc/nginx/sites-enabled/default
-  else
-    sed -i -e "s#proxy_pass .*#proxy_pass $NGINX_BACKEND;#" \
-      /etc/nginx/sites-enabled/default
-  fi
-
-  sed -i -e "s@# wallarm_mode .*@wallarm_mode ${WALLARM_MODE:-monitoring};@" \
-    /etc/nginx/sites-enabled/default
-}
-
 
 if [ "x${SLAB_ALLOC_ARENA}" = 'x' ]; then
   if [ -n "$TARANTOOL_MEMORY_GB" ]; then
@@ -109,7 +75,5 @@ fi
 
 prepare_dirs
 register_node
-sync_node
-configure_nginx
 
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
